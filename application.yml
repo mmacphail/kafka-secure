@@ -1,0 +1,7 @@
+akhq:
+  connections:
+    my-cluster:
+      properties:
+        bootstrap.servers: 'kafka1:9092'
+      schema-registry:
+        url: "http://schema-registry:8081"
