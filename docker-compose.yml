@@ -1,13 +1,5 @@
 version: '3.1'
 services:
-  db:
-    image: postgres
-    container_name: postgres
-    environment:
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - '5432:5432'
-
   zk1:
     image: confluentinc/cp-zookeeper:6.0.0
     container_name: zk1
@@ -30,59 +22,64 @@ services:
         ZOOKEEPER_SERVER_ID: "3"
 
   kafka1:
-    image: confluentinc/cp-kafka:6.0.0
+    build: 
+      context: ./kafka
+      args:
+        truststore: certs/kafka1/kafka.server.truststore.jks
+        keystore: certs/kafka1/kafka.server.keystore.jks
     container_name: kafka1
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zk1:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka1:9092
+      KAFKA_ADVERTISED_LISTENERS: SSL://kafka1:9092
+      KAFKA_SECURITY_INTER_BROKER_PROTOCOL: SSL
+      KAFKA_SSL_KEYSTORE_FILENAME: kafka.server.keystore.jks
+      KAFKA_SSL_KEYSTORE_CREDENTIALS: kafka_sslkey_creds
+      KAFKA_SSL_KEY_CREDENTIALS: kafka_sslkey_creds
+      KAFKA_SSL_TRUSTSTORE_FILENAME: kafka.server.truststore.jks
+      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: kafka_sslkey_creds
+      KAFKA_SSL_CLIENT_AUTH: required
     ports:
       - '9092:9092'
 
   kafka2:
-    image: confluentinc/cp-kafka:6.0.0
+    build: 
+      context: ./kafka
+      args:
+        truststore: certs/kafka2/kafka.server.truststore.jks
+        keystore: certs/kafka2/kafka.server.keystore.jks
     container_name: kafka2
     environment:
-      KAFKA_BROKER_ID: 2
+      KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zk1:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka2:9093
+      KAFKA_ADVERTISED_LISTENERS: SSL://kafka2:9093
+      KAFKA_SECURITY_INTER_BROKER_PROTOCOL: SSL
+      KAFKA_SSL_KEYSTORE_FILENAME: kafka.server.keystore.jks
+      KAFKA_SSL_KEYSTORE_CREDENTIALS: kafka_sslkey_creds
+      KAFKA_SSL_KEY_CREDENTIALS: kafka_sslkey_creds
+      KAFKA_SSL_TRUSTSTORE_FILENAME: kafka.server.truststore.jks
+      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: kafka_sslkey_creds
+      KAFKA_SSL_CLIENT_AUTH: required
     ports:
       - '9093:9093'
 
   kafka3:
-    image: confluentinc/cp-kafka:6.0.0
+    build: 
+      context: ./kafka
+      args:
+        truststore: certs/kafka3/kafka.server.truststore.jks
+        keystore: certs/kafka3/kafka.server.keystore.jks
     container_name: kafka3
     environment:
-      KAFKA_BROKER_ID: 3
+      KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zk1:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka3:9094
+      KAFKA_ADVERTISED_LISTENERS: SSL://kafka1:9094
+      KAFKA_SECURITY_INTER_BROKER_PROTOCOL: SSL
+      KAFKA_SSL_KEYSTORE_FILENAME: kafka.server.keystore.jks
+      KAFKA_SSL_KEYSTORE_CREDENTIALS: kafka_sslkey_creds
+      KAFKA_SSL_KEY_CREDENTIALS: kafka_sslkey_creds
+      KAFKA_SSL_TRUSTSTORE_FILENAME: kafka.server.truststore.jks
+      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: kafka_sslkey_creds
+      KAFKA_SSL_CLIENT_AUTH: required
     ports:
       - '9094:9094'
-  
-  schema-registry:
-    image: confluentinc/cp-schema-registry:6.0.0
-    container_name: schema-registry
-    environment:
-      SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: zk1:2181
-      SCHEMA_REGISTRY_HOST_NAME: schema-registry
-      SCHEMA_REGISTRY_LISTENERS: http://schema-registry:8081
-      SCHEMA_REGISTRY_DEBUG: 'true'
-    ports:
-      - '8084:8081'
-
-  akhq:
-    image: tchiotludo/akhq
-    container_name: akhq
-    volumes:
-      - .\application.yml:/app/application.yml
-    ports:
-      - '8083:8080'
-
-  tools:
-    image: cnfltraining/training-tools:5.5
-    container_name: tools
-    hostname: tools
-    volumes:
-      - .:/root/confluent-dev/
-    command: /bin/sh
-    tty: true
