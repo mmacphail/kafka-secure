@@ -1,85 +1,197 @@
 version: '3.1'
 services:
   zk1:
-    image: confluentinc/cp-zookeeper:6.0.0
+    build: 
+      context: ./zookeeper
+      args:
+        truststore: ./certs/zk1/zookeeper.server.truststore.jks
+        keystore: ./certs/zk1/zookeeper.server.keystore.jks
     container_name: zk1
+    hostname: zk1
+    domainname: zk1.dev.local
     environment:
-        ZOOKEEPER_CLIENT_PORT: "2181"
+        ZOOKEEPER_SECURE_CLIENT_PORT: "2181"
         ZOOKEEPER_SERVER_ID: "1"
+        ZOOKEEPER_SERVER_CNXN_FACTORY: org.apache.zookeeper.server.NettyServerCnxnFactory
+        ZOOKEEPER_AUTH_PROVIDER_X509: org.apache.zookeeper.server.auth.X509AuthenticationProvider
+        ZOOKEEPER_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.zookeeper.keystore.jks
+        ZOOKEEPER_SSL_KEYSTORE_CREDENTIALS: kafka_sslkey_creds
+        ZOOKEEPER_SSL_KEYSTORE_TYPE: PKCS12
+        ZOOKEEPER_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.zookeeper.truststore.jks
+        ZOOKEEPER_SSL_TRUSTSTORE_CREDENTIALS: kafka_sslkey_creds
+        ZOOKEEPER_SSL_TRUSTSTORE_TYPE: JKS
+        ZOOKEEPER_SSL_CLIENT_AUTH: need
+    networks:
+      dev:
+        aliases:
+          - zk1.dev.local
 
   zk2:
-    image: confluentinc/cp-zookeeper:6.0.0
+    build: 
+      context: ./zookeeper
+      args:
+        truststore: ./certs/zk2/zookeeper.server.truststore.jks
+        keystore: ./certs/zk2/zookeeper.server.keystore.jks
     container_name: zk2
+    hostname: zk2
+    domainname: zk2.dev.local
     environment:
-        ZOOKEEPER_CLIENT_PORT: "2181"
+        ZOOKEEPER_SECURE_CLIENT_PORT: "2181"
         ZOOKEEPER_SERVER_ID: "2"
+        ZOOKEEPER_SERVER_CNXN_FACTORY: org.apache.zookeeper.server.NettyServerCnxnFactory
+        ZOOKEEPER_AUTH_PROVIDER_X509: org.apache.zookeeper.server.auth.X509AuthenticationProvider
+        ZOOKEEPER_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.zookeeper.keystore.jks
+        ZOOKEEPER_SSL_KEYSTORE_CREDENTIALS: kafka_sslkey_creds
+        ZOOKEEPER_SSL_KEYSTORE_TYPE: PKCS12
+        ZOOKEEPER_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.zookeeper.truststore.jks
+        ZOOKEEPER_SSL_TRUSTSTORE_CREDENTIALS: kafka_sslkey_creds
+        ZOOKEEPER_SSL_TRUSTSTORE_TYPE: JKS
+        ZOOKEEPER_SSL_CLIENT_AUTH: need
+    networks:
+      dev:
+        aliases:
+          - zk2.dev.local
 
   zk3:
-    image: confluentinc/cp-zookeeper:6.0.0
+    build: 
+      context: ./zookeeper
+      args:
+        truststore: ./certs/zk3/zookeeper.server.truststore.jks
+        keystore: ./certs/zk3/zookeeper.server.keystore.jks
     container_name: zk3
+    hostname: zk3
+    domainname: zk3.dev.local
     environment:
-        ZOOKEEPER_CLIENT_PORT: "2181"
+        ZOOKEEPER_SECURE_CLIENT_PORT: "2181"
         ZOOKEEPER_SERVER_ID: "3"
+        ZOOKEEPER_SERVER_CNXN_FACTORY: org.apache.zookeeper.server.NettyServerCnxnFactory
+        ZOOKEEPER_AUTH_PROVIDER_X509: org.apache.zookeeper.server.auth.X509AuthenticationProvider
+        ZOOKEEPER_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.zookeeper.keystore.jks
+        ZOOKEEPER_SSL_KEYSTORE_CREDENTIALS: kafka_sslkey_creds
+        ZOOKEEPER_SSL_KEYSTORE_TYPE: PKCS12
+        ZOOKEEPER_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.zookeeper.truststore.jks
+        ZOOKEEPER_SSL_TRUSTSTORE_CREDENTIALS: kafka_sslkey_creds
+        ZOOKEEPER_SSL_TRUSTSTORE_TYPE: JKS
+        ZOOKEEPER_SSL_CLIENT_AUTH: need
+    networks:
+      dev:
+        aliases:
+          - zk3.dev.local
 
   kafka1:
     build: 
       context: ./kafka
       args:
-        truststore: certs/kafka1/kafka.server.truststore.jks
-        keystore: certs/kafka1/kafka.server.keystore.jks
+        truststore: ./certs/kafka1/kafka.server.truststore.jks
+        keystore: ./certs/kafka1/kafka.server.keystore.jks
     container_name: kafka1
+    hostname: kafka1
+    domainname: kafka1.dev.local
     environment:
       KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zk1:2181
-      KAFKA_ADVERTISED_LISTENERS: SSL://kafka1:9092
+      KAFKA_ZOOKEEPER_CONNECT: zk1.dev.local:2181
+      KAFKA_ZOOKEEPER_SSL_CLIENT_ENABLE: 'true'
+      KAFKA_ZOOKEEPER_CLIENT_CNXN_SOCKET: org.apache.zookeeper.ClientCnxnSocketNetty
+      KAFKA_ZOOKEEPER_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.server.keystore.jks
+      KAFKA_ZOOKEEPER_SSL_KEYSTORE_PASSWORD: "secret$$"
+      KAFKA_ZOOKEEPER_SSL_KEYSTORE_TYPE: PKCS12
+      KAFKA_ZOOKEEPER_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.server.truststore.jks
+      KAFKA_ZOOKEEPER_SSL_TRUSTSTORE_PASSWORD: "secret$$"
+      KAFKA_ZOOKEEPER_SSL_TRUSTSTORE_TYPE: JKS
+      KAFKA_ZOOKEEPER_SET_ACL: 'true'
+      KAFKA_ADVERTISED_LISTENERS: SSL://kafka1.dev.local:9092
       KAFKA_SECURITY_INTER_BROKER_PROTOCOL: SSL
       KAFKA_SSL_KEYSTORE_FILENAME: kafka.server.keystore.jks
       KAFKA_SSL_KEYSTORE_CREDENTIALS: kafka_sslkey_creds
+      KAFKA_SSL_KEYSTORE_TYPE: PKCS12
       KAFKA_SSL_KEY_CREDENTIALS: kafka_sslkey_creds
       KAFKA_SSL_TRUSTSTORE_FILENAME: kafka.server.truststore.jks
       KAFKA_SSL_TRUSTSTORE_CREDENTIALS: kafka_sslkey_creds
+      KAFKA_SSL_TRUSTSTORE_TYPE: JKS
       KAFKA_SSL_CLIENT_AUTH: required
     ports:
       - '9092:9092'
+    networks:
+      dev:
+        aliases:
+          - kafka1.dev.local
 
   kafka2:
     build: 
       context: ./kafka
       args:
-        truststore: certs/kafka2/kafka.server.truststore.jks
-        keystore: certs/kafka2/kafka.server.keystore.jks
+        truststore: ./certs/kafka2/kafka.server.truststore.jks
+        keystore: ./certs/kafka2/kafka.server.keystore.jks
     container_name: kafka2
+    hostname: kafka2
+    domainname: kafka2.dev.local
     environment:
       KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zk1:2181
-      KAFKA_ADVERTISED_LISTENERS: SSL://kafka2:9093
+      KAFKA_ZOOKEEPER_CONNECT: zk1.dev.local:2181
+      KAFKA_ZOOKEEPER_SSL_CLIENT_ENABLE: 'true'
+      KAFKA_ZOOKEEPER_CLIENT_CNXN_SOCKET: org.apache.zookeeper.ClientCnxnSocketNetty
+      KAFKA_ZOOKEEPER_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.server.keystore.jks
+      KAFKA_ZOOKEEPER_SSL_KEYSTORE_PASSWORD: "secret$$"
+      KAFKA_ZOOKEEPER_SSL_KEYSTORE_TYPE: PKCS12
+      KAFKA_ZOOKEEPER_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.server.truststore.jks
+      KAFKA_ZOOKEEPER_SSL_TRUSTSTORE_PASSWORD: "secret$$"
+      KAFKA_ZOOKEEPER_SSL_TRUSTSTORE_TYPE: JKS
+      KAFKA_ZOOKEEPER_SET_ACL: 'true'
+      KAFKA_ADVERTISED_LISTENERS: SSL://kafka2.dev.local:9093
       KAFKA_SECURITY_INTER_BROKER_PROTOCOL: SSL
       KAFKA_SSL_KEYSTORE_FILENAME: kafka.server.keystore.jks
       KAFKA_SSL_KEYSTORE_CREDENTIALS: kafka_sslkey_creds
+      KAFKA_SSL_KEYSTORE_TYPE: PKCS12
       KAFKA_SSL_KEY_CREDENTIALS: kafka_sslkey_creds
       KAFKA_SSL_TRUSTSTORE_FILENAME: kafka.server.truststore.jks
       KAFKA_SSL_TRUSTSTORE_CREDENTIALS: kafka_sslkey_creds
+      KAFKA_SSL_TRUSTSTORE_TYPE: JKS
       KAFKA_SSL_CLIENT_AUTH: required
     ports:
       - '9093:9093'
+    networks:
+      dev:
+        aliases:
+          - kafka2.dev.local
 
   kafka3:
     build: 
       context: ./kafka
       args:
-        truststore: certs/kafka3/kafka.server.truststore.jks
-        keystore: certs/kafka3/kafka.server.keystore.jks
+        truststore: ./certs/kafka3/kafka.server.truststore.jks
+        keystore: ./certs/kafka3/kafka.server.keystore.jks
     container_name: kafka3
+    hostname: kafka3.dev.local
+    domainname: kafka3.dev.local
     environment:
       KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zk1:2181
-      KAFKA_ADVERTISED_LISTENERS: SSL://kafka1:9094
+      KAFKA_ZOOKEEPER_CONNECT: zk1.dev.local:2181
+      KAFKA_ZOOKEEPER_SSL_CLIENT_ENABLE: 'true'
+      KAFKA_ZOOKEEPER_CLIENT_CNXN_SOCKET: org.apache.zookeeper.ClientCnxnSocketNetty
+      KAFKA_ZOOKEEPER_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.server.keystore.jks
+      KAFKA_ZOOKEEPER_SSL_KEYSTORE_PASSWORD: "secret$$"
+      KAFKA_ZOOKEEPER_SSL_KEYSTORE_TYPE: PKCS12
+      KAFKA_ZOOKEEPER_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.server.truststore.jks
+      KAFKA_ZOOKEEPER_SSL_TRUSTSTORE_PASSWORD: "secret$$"
+      KAFKA_ZOOKEEPER_SSL_TRUSTSTORE_TYPE: JKS
+      KAFKA_ZOOKEEPER_SET_ACL: 'true'
+      KAFKA_ADVERTISED_LISTENERS: SSL://kafka3.dev.local:9094
       KAFKA_SECURITY_INTER_BROKER_PROTOCOL: SSL
       KAFKA_SSL_KEYSTORE_FILENAME: kafka.server.keystore.jks
       KAFKA_SSL_KEYSTORE_CREDENTIALS: kafka_sslkey_creds
+      KAFKA_SSL_KEYSTORE_TYPE: PKCS12
       KAFKA_SSL_KEY_CREDENTIALS: kafka_sslkey_creds
       KAFKA_SSL_TRUSTSTORE_FILENAME: kafka.server.truststore.jks
       KAFKA_SSL_TRUSTSTORE_CREDENTIALS: kafka_sslkey_creds
+      KAFKA_SSL_TRUSTSTORE_TYPE: JKS
       KAFKA_SSL_CLIENT_AUTH: required
     ports:
       - '9094:9094'
+    networks:
+      dev:
+        aliases:
+          - kafka3.dev.local
+
+networks:
+  dev:
+    driver: bridge

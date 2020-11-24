@@ -1,0 +1,163 @@
+version: '3.1'
+services:
+  db:
+    image: postgres
+    container_name: postgres
+    environment:
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - '5432:5432'
+
+  zk1:
+    image: confluentinc/cp-zookeeper:6.0.0
+    container_name: zk1
+    environment:
+        ZOOKEEPER_CLIENT_PORT: "2181"
+        ZOOKEEPER_SERVER_ID: "1"
+
+  zk2:
+    image: confluentinc/cp-zookeeper:6.0.0
+    container_name: zk2
+    environment:
+        ZOOKEEPER_CLIENT_PORT: "2181"
+        ZOOKEEPER_SERVER_ID: "2"
+
+  zk3:
+    image: confluentinc/cp-zookeeper:6.0.0
+    container_name: zk3
+    environment:
+        ZOOKEEPER_CLIENT_PORT: "2181"
+        ZOOKEEPER_SERVER_ID: "3"
+
+  kafka1:
+    image: confluentinc/cp-kafka:6.0.0
+    container_name: kafka1
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zk1:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka1:9092
+    ports:
+      - '9092:9092'
+
+  kafka2:
+    image: confluentinc/cp-kafka:6.0.0
+    container_name: kafka2
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zk1:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka2:9093
+    ports:
+      - '9093:9093'
+
+  kafka3:
+    image: confluentinc/cp-kafka:6.0.0
+    container_name: kafka3
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: zk1:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka3:9094
+    ports:
+      - '9094:9094'
+  
+  schema-registry:
+    image: confluentinc/cp-schema-registry:6.0.0
+    container_name: schema-registry
+    environment:
+      SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: zk1:2181
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_LISTENERS: http://schema-registry:8081
+      SCHEMA_REGISTRY_DEBUG: 'true'
+    ports:
+      - '8084:8081'
+  
+  connect1:
+    build: ./connect
+    container_name: connect1
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: kafka1:9092
+      CONNECT_REST_PORT: 8083
+      CONNECT_GROUP_ID: myconnectgroup
+      CONNECT_CONFIG_STORAGE_TOPIC: mcg-config
+      CONNECT_OFFSET_STORAGE_TOPIC: mcg-offsets
+      CONNECT_STATUS_STORAGE_TOPIC: mcg-status
+      CONNECT_KEY_CONVERTER: 'org.apache.kafka.connect.storage.StringConverter'
+      CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      CONNECT_VALUE_CONVERTER: 'io.confluent.connect.avro.AvroConverter'
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      CONNECT_INTERNAL_KEY_CONVERTER: 'org.apache.kafka.connect.json.JsonConverter'
+      CONNECT_INTERNAL_VALUE_CONVERTER: 'org.apache.kafka.connect.json.JsonConverter'
+      CONNECT_REST_ADVERTISED_HOST_NAME: connect1
+      CONNECT_PLUGIN_PATH: '/usr/share/java,/usr/share/java,/usr/share/confluent-hub-components'
+    ports:
+      - '8085:8083'
+  
+  connect2:
+    build: ./connect
+    container_name: connect2
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: kafka1:9092
+      CONNECT_REST_PORT: 8083
+      CONNECT_GROUP_ID: myconnectgroup
+      CONNECT_CONFIG_STORAGE_TOPIC: mcg-config
+      CONNECT_OFFSET_STORAGE_TOPIC: mcg-offsets
+      CONNECT_STATUS_STORAGE_TOPIC: mcg-status
+      CONNECT_KEY_CONVERTER: 'org.apache.kafka.connect.storage.StringConverter'
+      CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      CONNECT_VALUE_CONVERTER: 'io.confluent.connect.avro.AvroConverter'
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      CONNECT_INTERNAL_KEY_CONVERTER: 'org.apache.kafka.connect.json.JsonConverter'
+      CONNECT_INTERNAL_VALUE_CONVERTER: 'org.apache.kafka.connect.json.JsonConverter'
+      CONNECT_REST_ADVERTISED_HOST_NAME: connect2
+      CONNECT_PLUGIN_PATH: '/usr/share/java,/usr/share/java,/usr/share/confluent-hub-components'
+      
+  connect3:
+    build: ./connect
+    container_name: connect3
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: kafka1:9092
+      CONNECT_REST_PORT: 8083
+      CONNECT_GROUP_ID: myconnectgroup
+      CONNECT_CONFIG_STORAGE_TOPIC: mcg-config
+      CONNECT_OFFSET_STORAGE_TOPIC: mcg-offsets
+      CONNECT_STATUS_STORAGE_TOPIC: mcg-status
+      CONNECT_KEY_CONVERTER: 'org.apache.kafka.connect.storage.StringConverter'
+      CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      CONNECT_VALUE_CONVERTER: 'io.confluent.connect.avro.AvroConverter'
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      CONNECT_INTERNAL_KEY_CONVERTER: 'org.apache.kafka.connect.json.JsonConverter'
+      CONNECT_INTERNAL_VALUE_CONVERTER: 'org.apache.kafka.connect.json.JsonConverter'
+      CONNECT_REST_ADVERTISED_HOST_NAME: connect3
+      CONNECT_PLUGIN_PATH: '/usr/share/java,/usr/share/java,/usr/share/confluent-hub-components'
+    
+  akhq:
+    image: tchiotludo/akhq
+    container_name: akhq
+    volumes:
+      - ./application.yml:/app/application.yml
+    ports:
+      - '8083:8080'
+  
+  control-center:
+    image: confluentinc/cp-enterprise-control-center:6.0.0
+    container_name: control-center
+    ulimits:
+      nofile:
+        soft: 16384
+        hard: 16384
+    ports:
+      - '9021:9021'
+    environment:
+      CONTROL_CENTER_BOOTSTRAP_SERVERS: kafka1:9092
+      CONTROL_CENTER_REPLICATION_FACTOR: 3
+      CONTROL_CENTER_CONNECT_CLUSTER: http://connect1:8083
+      CONTROL_CENTER_REST_LISTENERS: http://control-center:9021
+
+
+  tools:
+    image: cnfltraining/training-tools:5.5
+    container_name: tools
+    hostname: tools
+    volumes:
+      - .:/root/confluent-dev/
+    command: /bin/sh
+    tty: true

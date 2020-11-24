@@ -1,5 +1,6 @@
 # Config reference for docker
 https://docs.confluent.io/current/installation/docker/config-reference.html
+https://github.com/confluentinc/cp-demo/blob/6.0.0-post/docker-compose.yml
 
 # Security
 
